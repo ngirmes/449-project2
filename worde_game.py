@@ -17,15 +17,6 @@ QuartSchema(app)
 
 app.config.from_file(f"./etc/{__name__}.toml", toml.load)
 
-
-@dataclasses.dataclass
-class User:
-    first_name: str
-    last_name: str
-    user_name: str
-    password: str
-
-
 @dataclasses.dataclass
 class Game:
     username: str
@@ -62,48 +53,7 @@ def index():
         <h1>Welcome to Wordle 2.0!!!</h1>
         """
     )
-
-
-@app.route("/users/", methods=["POST"])
-@validate_request(User)
-async def create_user(data):
-    db = await _get_db()
-    user = dataclasses.asdict(data)
-    try:
-        #Attempt to create new user in database
-        id = await db.execute(
-            """
-            INSERT INTO user(fname, lname, username, passwrd)
-            VALUES(:first_name, :last_name, :user_name, :password)
-            """,
-            user,
-        )
-    #Return 409 error if username is already in table
-    except sqlite3.IntegrityError as e:
-        abort(409, e)
-
-    user["id"] = id
-    return user, 201
-
-# User authentication endpoint
-@app.route("/user-auth/<string:username>/<string:password>", methods=["GET"])
-async def userAuth( username, password ):
-    db = await _get_db()
-    # Selection query with raw queries
-    select_query = "SELECT * FROM user WHERE username= :username AND passwrd= :password"
-    values = {"username": username, "password": password}
-
-    # Run the command
-    result = await db.fetch_one( select_query, values )
-
-    # Is the user registered?
-    if result:
-        return { "authenticated": "true" }, 200
-
-    else:
-        return 401, { "WWW-Authenticate": "Fake Realm" }
-
-
+    
 @app.route("/games/", methods=["POST"])
 @validate_request(Game)
 async def create_game(data):
