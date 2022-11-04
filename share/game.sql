@@ -3,10 +3,13 @@ BEGIN TRANSACTION;
 
 CREATE TABLE games (
     gamesid INTEGER PRIMARY KEY AUTOINCREMENT,
-    userid INTEGER,
+    username VARCHAR(25) NOT NULL,
     answerid INTEGER,
     gameid INTEGER,
-    FOREIGN KEY(userid) REFERENCES user(userid),
+    -- FOREIGN KEY(username) REFERENCES user(username),
+    -- From my research I found that FOREIGN KEYS cannot be across databases,
+    -- so maybe we have to manually select games using the username from the user database.
+    -- We can also try server triggers but I'm still looking into that.
     FOREIGN KEY (answerid) REFERENCES answer(answerid),
     FOREIGN KEY(gameid) REFERENCES game(gameid)
 );

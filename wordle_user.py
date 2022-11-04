@@ -26,7 +26,7 @@ class User:
     password: str
 
 async def _connect_db():
-    database = databases.Database(app.config["DATABASES"]["URL"])
+    database = databases.Database(app.config["USER_DATABASE"]["URL"])
     await database.connect()
     return database
 

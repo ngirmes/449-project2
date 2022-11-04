@@ -1,2 +1,4 @@
-[DATABASES]
-URL = 'sqlite+aiosqlite:///var/wordle.db'
+[USER_DATABASE]
+URL = 'sqlite+aiosqlite:///var/user.db'
+[GAME_DATABASE]
+URL = 'sqlite+aiosqlite:///var/game.db'

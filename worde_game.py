@@ -28,7 +28,7 @@ class Guess:
 
 
 async def _connect_db():
-    database = databases.Database(app.config["DATABASES"]["URL"])
+    database = databases.Database(app.config["GAME_DATABASE"]["URL"])
     await database.connect()
     return database
 
@@ -53,7 +53,7 @@ def index():
         <h1>Welcome to Wordle 2.0!!!</h1>
         """
     )
-    
+
 @app.route("/games/", methods=["POST"])
 @validate_request(Game)
 async def create_game(data):
@@ -99,13 +99,13 @@ async def create_game(data):
 
 
 #Should validate to check if guess is in valid_word table
-#if it is then insert into guess table 
+#if it is then insert into guess table
 #update game table by decrementing guess variable
 #if word is not valid throw 404 exception
 @app.route("/guess/",methods=["POST"])
 @validate_request(Guess)
 async def add_guess(data):
-    db = await _get_db() 
+    db = await _get_db()
 
     currGame = dataclasses.asdict(data)
     #checks whether guessed word is the answer for that game
@@ -123,13 +123,13 @@ async def add_guess(data):
             )
         except sqlite3.IntegrityError as e:
             abort(404, e)
-        return {"guessedWord":currGame["word"], "Accuracy":u'\u2713'*5},201 #should return correct answer? 
+        return {"guessedWord":currGame["word"], "Accuracy":u'\u2713'*5},201 #should return correct answer?
     #if 1 then word is valid otherwise it isn't valid and also check if they exceed guess limit
     isValidGuess = await db.fetch_one("SELECT * from valid_word where valword = :word;", values={"word":currGame["word"]})
     guessNum = await db.fetch_one("SELECT guesses from game where gameid = :gameid",values={"gameid":currGame["gameid"]})
     accuracy = ""
     if(isValidGuess is not None and len(isValidGuess) >= 1 and guessNum[0] < 6):
-        try: 
+        try:
             #make a dict mapping each character and its position from the answer
             answord = await db.fetch_one("SELECT answord FROM answer as a, games as g  where g.gameid = :gameid and g.answerid = a.answerid",values={"gameid":currGame["gameid"]})
             ansDict = {}
@@ -154,7 +154,7 @@ async def add_guess(data):
                 UPDATE game set guesses = :guessNum where gameid = :gameid
                 """,values={"guessNum":(guessNum[0]+1),"gameid":currGame['gameid']}
             )
-            #if after updating game number of guesses reaches max guesses then mark game as finished 
+            #if after updating game number of guesses reaches max guesses then mark game as finished
             if(guessNum[0]+1 >= 6):
                 #update game status as finished
                 id_games = await db.execute(
@@ -179,7 +179,7 @@ async def all_games(username):
     if userid:
 
         games_val = await db.fetch_all( "SELECT * FROM game as a where gameid IN (select gameid from games where userid = :userid) and a.gstate = :gstate;", values = {"userid":userid[0],"gstate":"In-progress"})
-        
+
         if games_val is None or len(games_val) == 0:
             return { "Message": "No Active Games" },406
 
@@ -199,9 +199,9 @@ async def my_game(username,gameid):
         guess_val = await db.fetch_all( "SELECT a.*, b.guesses, b.gstate FROM guess as a, game as b WHERE a.gameid = b.gameid and a.gameid = :gameid", values={"gameid":gameid})
 
         if guess_val is None or len(guess_val) == 0:
-            
+
             return { "Message": "Not An Active Game" },406
-        
+
         return list(map(dict,guess_val))
 
     else:
